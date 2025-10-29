@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EVARA · Catálogo</title>
+<link rel="icon" href="IMG-20251028-WA0054.jpg">
+<meta name="description" content="Catálogo EVARA con likes, compra por WhatsApp y administración protegida por PIN (básico).">
+<style>
+  :root {
+    --brand:#d86ad6;
+    --brand-ink:#2a0f30;
+    --bg:#fffafd;
+    --ink:#181718;
+    --muted:#595959;
+    --card:#ffffff;
+    --line:#eee;
+    --shadow:0 10px 26px rgba(0,0,0,.06);
+    --radius:18px;
+    --wa-bg:#CFF6DF; /* pastel EVARA */
+    --wa-ink:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    letter-spacing:.2px; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+  .container{max-width:1100px;margin:auto;padding:16px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 0}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{height:52px;border-radius:12px;object-fit:cover;box-shadow:var(--shadow)}
+  h1{font-size:1.35rem;margin:0;letter-spacing:.2px}
+  .tagline{color:var(--muted);font-size:.92rem;margin-top:2px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid transparent;padding:10px 14px;border-radius:12px;background:var(--brand);color:white;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:var(--shadow)}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+  .btn.icon{display:inline-flex;align-items:center;gap:8px}
+  .searchbar{display:flex;gap:8px;margin:12px 0}
+  .searchbar input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#fff}
+  .filters{display:flex;gap:8px;overflow:auto;padding:8px 0;margin:6px 0 16px}
+  .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:#333;white-space:nowrap;cursor:pointer;font-weight:700}
+  .chip.active{background:var(--brand);color:#fff;border-color:transparent}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .12s ease}
+  .card:hover{transform:translateY(-2px)}
+  .card img{width:100%;height:190px;object-fit:cover;background:#fafafa;cursor:pointer}
+  .pad{padding:12px;cursor:pointer}
+  .title{font-weight:900;line-height:1.25}
+  .price{font-size:1.06rem;color:var(--brand-ink);margin-top:4px;font-weight:900}
+  .cat{color:var(--muted);font-size:.86rem;margin-top:2px}
+  .buy{margin-top:12px;display:flex;gap:10px;align-items:center;justify-content:flex-start}
+  /* Icon-only WA button */
+  .wa-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:999px;background:var(--wa-bg);box-shadow:var(--shadow);border:1px solid var(--line)}
+  .wa-icon svg{width:22px;height:22px;fill:var(--wa-ink)}
+  /* Like badge top-right */
+  .like{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:999px;padding:6px 10px;display:flex;align-items:center;gap:6px;font-weight:900;cursor:pointer;user-select:none;box-shadow:var(--shadow)}
+  .like.hearted{color:#e6195e}
+  footer{text-align:center;color:#888;padding:30px 0;font-size:.9rem}
+  /* Modals */
+  .overlay, .modal{position:fixed;inset:0;display:none}
+  .overlay.active{display:block;background:rgba(0,0,0,.45)}
+  .modal.active{display:flex;align-items:center;justify-content:center;padding:20px}
+  .sheet{width:min(760px,95vw);background:#fff;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+  .sheet header{padding:14px 16px;border-bottom:1px solid var(--line)}
+  .sheet .content{padding:16px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  .field input, .field select, .field textarea{padding:12px;border:1px solid var(--line);border-radius:12px}
+  .muted{color:var(--muted)}
+  .actions-end{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .viewer .sheet{width:min(860px,96vw)}
+  .viewer .product{display:grid;grid-template-columns:1fr;gap:16px;padding:16px}
+  .viewer .product img{width:100%;max-height:460px;object-fit:cover;border-radius:16px}
+  .viewer h2{margin:0}
+  .viewer .meta{color:var(--muted);margin:.25rem 0 1rem}
+  @media(min-width:880px){
+    .viewer .product{grid-template-columns:1.2fr .8fr}
+  }
+  /* Tooltip (optional) */
+  .tooltip{position:relative}
+  .tooltip:hover::after{
+    content: attr(aria-label);
+    position:absolute; bottom:120%; left:50%; transform:translateX(-50%);
+    background:#000; color:#fff; font-size:.75rem; padding:4px 8px; border-radius:6px; white-space:nowrap; opacity:.8;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <img class="logo" src="IMG-20251028-WA0054.jpg" alt="EVARA logo">
+        <div>
+          <h1>EVARA</h1>
+          <div class="tagline">Compras que enamoran 💗</div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn icon" id="btnAdmin" href="#"><span>🔒</span>Ingreso</a>
+        <a class="btn ghost" id="btnWhats" target="_blank" href="https://wa.me/573166248262?text=Hola%20EVARA,%20quiero%20informaci%C3%B3n%20del%20cat%C3%A1logo">WhatsApp</a>
+        <a class="btn icon" id="btnAdd" href="#" style="display:none;"><span>➕</span>Agregar</a>
+      </div>
+    </header>
+
+    <div class="searchbar">
+      <input id="q" placeholder="Buscar… (ej: diadema, camiseta, navidad)">
+    </div>
+
+    <div class="filters" id="filters"></div>
+
+    <section class="grid" id="grid"></section>
+
+    <footer>© 2025 EVARA — Tipografía mejorada, botón WhatsApp minimalista y administración básica por PIN.</footer>
+  </div>
+
+  <!-- Admin PIN modal -->
+  <div class="overlay" id="ovPin"></div>
+  <div class="modal" id="mdPin" aria-hidden="true" role="dialog">
+    <div class="sheet">
+      <header><strong>Ingreso seguro (PIN)</strong></header>
+      <div class="content">
+        <div class="field">
+          <label>PIN de administrador</label>
+          <input id="fPin" type="password" placeholder="• • • • •">
+          <small class="muted">Este PIN se valida solo en el navegador. Para sitios públicos, usa Auth real.</small>
+        </div>
+        <div class="actions-end">
+          <button class="btn ghost" id="btnCancelPin">Cancelar</button>
+          <button class="btn" id="btnEnterPin">Ingresar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit modal -->
+  <div class="overlay" id="ovAdd"></div>
+  <div class="modal" id="mdAdd" aria-hidden="true" role="dialog">
+    <div class="sheet">
+      <header><strong>Agregar producto</strong></header>
+      <div class="content">
+        <div class="row">
+          <div class="field">
+            <label>Nombre</label>
+            <input id="fName" placeholder="Ej: Diadema Reno Suave">
+          </div>
+          <div class="field">
+            <label>Precio</label>
+            <input id="fPrice" placeholder="Ej: 29.900">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Categoría / Grupo</label>
+            <input id="fCat" list="dlCats" placeholder="Ej: Accesorios Navideños">
+            <datalist id="dlCats"></datalist>
+          </div>
+          <div class="field">
+            <label>Descripción (opcional)</label>
+            <input id="fDesc" placeholder="Breve detalle o material">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Imagen (subir archivo)</label>
+            <input type="file" id="fImgFile" accept="image/*">
+            <small class="muted">Se guarda en este equipo (localStorage) como base64.</small>
+          </div>
+          <div class="field">
+            <label>o usar imagen existente (misma carpeta)</label>
+            <select id="fImgSelect">
+              <option value="">— Selecciona —</option>
+              <option value="IMG-20251028-WA0051.jpg">IMG-20251028-WA0051.jpg</option><option value="IMG-20251028-WA0052.jpg">IMG-20251028-WA0052.jpg</option><option value="IMG-20251028-WA0053.jpg">IMG-20251028-WA0053.jpg</option><option value="IMG-20251028-WA0054.jpg">IMG-20251028-WA0054.jpg</option><option value="IMG-20251028-WA0055.jpg">IMG-20251028-WA0055.jpg</option><option value="IMG-20251028-WA0042.jpg">IMG-20251028-WA0042.jpg</option><option value="IMG-20251028-WA0043.jpg">IMG-20251028-WA0043.jpg</option><option value="IMG-20251028-WA0044.jpg">IMG-20251028-WA0044.jpg</option><option value="IMG-20251028-WA0045.jpg">IMG-20251028-WA0045.jpg</option><option value="IMG-20251028-WA0046.jpg">IMG-20251028-WA0046.jpg</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions-end">
+          <button class="btn ghost" id="btnCancelAdd">Cancelar</button>
+          <button class="btn" id="btnSave">Publicar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product viewer modal -->
+  <div class="overlay" id="ovView"></div>
+  <div class="modal viewer" id="mdView" aria-hidden="true" role="dialog">
+    <div class="sheet">
+      <div class="product">
+        <img id="vImg" alt="Producto EVARA">
+        <div>
+          <h2 id="vTitle"></h2>
+          <div class="meta"><span id="vCat"></span> • <strong id="vPrice"></strong></div>
+          <p id="vDesc" class="muted"></p>
+          <div class="actions-end">
+            <a class="wa-icon tooltip" id="vBuy" target="_blank" aria-label="Comprar por WhatsApp">
+              <!-- Minimal white WhatsApp icon on pastel background -->
+              <svg viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M19.4 17.2c-.3-.2-1.7-.9-2-.9-.3 0-.6-.1-.9.3-.3.4-1 1-1.2 1.2-.2.2-.4.3-.7.1-1.9-1-3.2-1.7-4.5-3.9-.3-.6.3-.6.9-1.9.1-.2 0-.4 0-.6s-.3-.4-.4-.5c-.2-.1-.6-.5-.9-.5s-.7 0-1 .1c-.3.1-.9.9-.9 2.1s1 2.4 1.2 2.6c.2.3 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.1-1.4-.1-.1-.2-.1-.3-.2zM16 3C8.8 3 3 8.7 3 15.8c0 2.8.9 5.3 2.4 7.4L4 29l5-1.3c2 1.1 4.3 1.7 7 1.7 7.2 0 13-5.8 13-13S23.2 3 16 3zm0 23.4c-2.2 0-4.2-.6-5.9-1.6l-.4-.2-2.9.8.8-2.8-.2-.4c-1.1-1.7-1.7-3.7-1.7-5.9 0-6 4.9-10.9 10.9-10.9S26.9 9.3 26.9 15.3 22 26.4 16 26.4z"></path>
+              </svg>
+            </a>
+            <button class="btn ghost" id="vClose">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const WHATS = "573166248262";
+const STORAGE_KEY = "evara_catalog_v1";
+const LIKES_KEY = "evara_likes_v1";
+const ADMIN_OK = "evara_admin_ok";
+const ADMIN_PIN = "43210"; // Cambia este PIN
+
+const seedCatalog = [{"id": 1, "img": "IMG-20251028-WA0051.jpg", "name": "Diadema Reno Suave", "price": "29.900", "cat": "Accesorios Navide\u00f1os", "desc": ""}, {"id": 2, "img": "IMG-20251028-WA0055.jpg", "name": "Diadema Reno Deluxe", "price": "34.900", "cat": "Accesorios Navide\u00f1os", "desc": ""}, {"id": 3, "img": "IMG-20251028-WA0052.jpg", "name": "Llavero Fitness Pack", "price": "19.900", "cat": "Llaveros", "desc": ""}, {"id": 4, "img": "IMG-20251028-WA0053.jpg", "name": "Dulcero \u00c1rbol Navidad", "price": "24.900", "cat": "Navidad & Dulces", "desc": ""}, {"id": 5, "img": "IMG-20251028-WA0042.jpg", "name": "Camiseta More Amor", "price": "49.900", "cat": "Camisetas", "desc": ""}, {"id": 6, "img": "IMG-20251028-WA0045.jpg", "name": "Pa\u00f1uelo Navide\u00f1o Mascota", "price": "19.900", "cat": "Mascotas", "desc": ""}, {"id": 7, "img": "IMG-20251028-WA0043.jpg", "name": "Camiseta Cin Cin", "price": "49.900", "cat": "Camisetas", "desc": ""}, {"id": 8, "img": "IMG-20251028-WA0044.jpg", "name": "Aretes Cangrejo & Concha", "price": "22.900", "cat": "Joyas", "desc": ""}, {"id": 9, "img": "IMG-20251028-WA0046.jpg", "name": "Neceser Terciopelo Rosado", "price": "29.900", "cat": "Bolsos & Accesorios", "desc": ""}];
+
+function loadCatalog(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw){ localStorage.setItem(STORAGE_KEY, JSON.stringify(seedCatalog)); return seedCatalog; }
+  try{ return JSON.parse(raw); }catch(e){ console.warn("catalog parse", e); return seedCatalog; }
+}
+function saveCatalog(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function loadLikes(){
+  try{ return JSON.parse(localStorage.getItem(LIKES_KEY) || "{}"); }catch(e){ return {}; }
+}
+function saveLikes(map){ localStorage.setItem(LIKES_KEY, JSON.stringify(map)); }
+
+let catalog = loadCatalog();
+let likes = loadLikes();
+
+const grid = document.getElementById('grid');
+const filters = document.getElementById('filters');
+const q = document.getElementById('q');
+
+const btnAdmin = document.getElementById('btnAdmin');
+const btnAdd = document.getElementById('btnAdd');
+
+// Admin PIN modal
+const ovPin = document.getElementById('ovPin');
+const mdPin = document.getElementById('mdPin');
+const fPin = document.getElementById('fPin');
+const btnCancelPin = document.getElementById('btnCancelPin');
+const btnEnterPin = document.getElementById('btnEnterPin');
+
+function isAdmin(){ return sessionStorage.getItem(ADMIN_OK) === "1"; }
+function showAddIfAdmin(){ btnAdd.style.display = isAdmin() ? "" : "none"; }
+showAddIfAdmin();
+
+btnAdmin.addEventListener('click', (e)=>{ e.preventDefault(); ovPin.classList.add('active'); mdPin.classList.add('active'); });
+btnCancelPin.addEventListener('click', (e)=>{ e.preventDefault(); ovPin.classList.remove('active'); mdPin.classList.remove('active'); });
+ovPin.addEventListener('click', ()=>{ ovPin.classList.remove('active'); mdPin.classList.remove('active'); });
+btnEnterPin.addEventListener('click', ()=>{ 
+  if(fPin.value === ADMIN_PIN){ sessionStorage.setItem(ADMIN_OK,"1"); showAddIfAdmin(); ovPin.classList.remove('active'); mdPin.classList.remove('active'); fPin.value=""; }
+  else alert("PIN incorrecto");
+});
+
+// Categories/filter
+function categoriesFrom(data){ return [...new Set(data.map(x => x.cat).filter(Boolean))].sort(); }
+function renderFilters(){
+  const cats = categoriesFrom(catalog);
+  filters.innerHTML = '<span class="chip active" data-cat="*">Todo</span>' + cats.map(c=>`<span class="chip" data-cat="${c}">${c}</span>`).join('');
+  [...filters.querySelectorAll('.chip')].forEach(ch => ch.addEventListener('click', e => {
+    [...filters.querySelectorAll('.chip')].forEach(x=>x.classList.remove('active'));
+    ch.classList.add('active');
+    applyFilter();
+  }));
+}
+
+// Likes
+function prodKey(p){ return String(p.id || p.name); }
+function getLikes(p){ return likes[prodKey(p)] || 0; }
+function isHearted(p){ return getLikes(p) > 0; }
+function toggleLike(idx){
+  const p = catalog[idx]; if(!p) return;
+  const key = prodKey(p);
+  likes[key] = isHearted(p) ? 0 : 1;
+  saveLikes(likes);
+  const el = grid.querySelector(`[data-index="${idx}"] .like`);
+  if(el){ el.classList.toggle('hearted', isHearted(p)); el.querySelector('.count').textContent = getLikes(p); }
+}
+
+// Card + WA icon-only
+function waIconHref(p){
+  return `https://wa.me/${WHATS}?text=Hola%20EVARA,%20quiero%20comprar:%20${encodeURIComponent(p.name)}%20($%20${encodeURIComponent(p.price)})`;
+}
+
+function cardTemplate(p, idx){
+  const hearted = isHearted(p) ? "hearted" : "";
+  const cnt = getLikes(p);
+  return `
+  <article class="card" data-index="${idx}" data-cat="${p.cat}" data-title="${p.name.toLowerCase()}">
+    <button class="like ${hearted}" data-index="${idx}" aria-label="Me gusta">
+      <span>♥</span><span class="count">${cnt}</span>
+    </button>
+    <img src="${p.img}" alt="${p.name}" data-index="${idx}" class="img-click">
+    <div class="pad" data-index="${idx}">
+      <div class="title">${p.name}</div>
+      <div class="price">$ ${p.price} <span class="cat">• ${p.cat}</span></div>
+      <div class="buy">
+        <a class="wa-icon tooltip" href="${waIconHref(p)}" target="_blank" aria-label="WhatsApp">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M19.4 17.2c-.3-.2-1.7-.9-2-.9-.3 0-.6-.1-.9.3-.3.4-1 1-1.2 1.2-.2.2-.4.3-.7.1-1.9-1-3.2-1.7-4.5-3.9-.3-.6.3-.6.9-1.9.1-.2 0-.4 0-.6s-.3-.4-.4-.5c-.2-.1-.6-.5-.9-.5s-.7 0-1 .1c-.3.1-.9.9-.9 2.1s1 2.4 1.2 2.6c.2.3 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.3.1-1.4-.1-.1-.2-.1-.3-.2zM16 3C8.8 3 3 8.7 3 15.8c0 2.8.9 5.3 2.4 7.4L4 29l5-1.3c2 1.1 4.3 1.7 7 1.7 7.2 0 13-5.8 13-13S23.2 3 16 3zm0 23.4c-2.2 0-4.2-.6-5.9-1.6l-.4-.2-2.9.8.8-2.8-.2-.4c-1.1-1.7-1.7-3.7-1.7-5.9 0-6 4.9-10.9 10.9-10.9S26.9 9.3 26.9 15.3 22 26.4 16 26.4z"></path></svg>
+        </a>
+      </div>
+    </div>
+  </article>
+  `;
+}
+
+function renderGrid(){
+  grid.innerHTML = catalog.map((p,i)=>cardTemplate(p,i)).join('');
+  grid.querySelectorAll('.img-click').forEach(img => img.addEventListener('click', openViewer));
+  grid.querySelectorAll('.card .pad').forEach(el => el.addEventListener('click', e => { openViewerIndex(el.dataset.index); }));
+  grid.querySelectorAll('.like').forEach(btn => btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggleLike(Number(btn.dataset.index)); }));
+}
+
+function applyFilter(){
+  const active = filters.querySelector('.chip.active')?.dataset.cat || '*';
+  const term = (q.value || '').toLowerCase().trim();
+  [...grid.querySelectorAll('.card')].forEach(c => {
+    const okCat = active === '*' || c.dataset.cat === active;
+    const okText = !term || c.dataset.title.includes(term);
+    c.style.display = (okCat && okText) ? '' : 'none';
+  });
+}
+
+q.addEventListener('input', applyFilter);
+
+// Add Product Modal (same as v3)
+const ovAdd = document.getElementById('ovAdd');
+const mdAdd = document.getElementById('mdAdd');
+const btnCancelAdd = document.getElementById('btnCancelAdd');
+const btnSave = document.getElementById('btnSave');
+const fName = document.getElementById('fName');
+const fPrice = document.getElementById('fPrice');
+const fCat = document.getElementById('fCat');
+const fDesc = document.getElementById('fDesc');
+const fImgFile = document.getElementById('fImgFile');
+const fImgSelect = document.getElementById('fImgSelect');
+const dlCats = document.getElementById('dlCats');
+
+function fillCatsDatalist(){ dlCats.innerHTML = categoriesFrom(catalog).map(c=>`<option value="${c}">`).join(''); }
+function openAdd(){ if(!isAdmin()) return alert("Ingresa con PIN para agregar."); fillCatsDatalist(); ovAdd.classList.add('active'); mdAdd.classList.add('active'); }
+function closeAdd(){ ovAdd.classList.remove('active'); mdAdd.classList.remove('active'); [fName,fPrice,fCat,fDesc].forEach(i=>i.value=''); fImgFile.value=''; fImgSelect.value=''; }
+
+btnAdd.addEventListener('click', e => { e.preventDefault(); openAdd(); });
+btnCancelAdd.addEventListener('click', e => { e.preventDefault(); closeAdd(); });
+ovAdd.addEventListener('click', closeAdd);
+
+function readFileAsDataURL(file){
+  return new Promise((resolve,reject)=>{ const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.onerror = reject; fr.readAsDataURL(file); });
+}
+
+btnSave.addEventListener('click', async e => {
+  e.preventDefault();
+  if(!isAdmin()) return alert("No autorizado.");
+  const name = fName.value.trim();
+  const price = fPrice.value.trim();
+  const cat = fCat.value.trim();
+  const desc = fDesc.value.trim();
+  if(!name || !price || !cat) return alert("Completa nombre, precio y categoría.");
+  let img = "";
+  if(fImgFile.files && fImgFile.files[0]) { img = await readFileAsDataURL(fImgFile.files[0]); }
+  else if(fImgSelect.value) { img = fImgSelect.value; }
+  else { return alert("Selecciona o sube una imagen."); }
+  const product = { id: Date.now(), name, price, cat, desc, img };
+  catalog.push(product);
+  saveCatalog(catalog);
+  renderFilters(); renderGrid(); applyFilter(); closeAdd();
+});
+
+// Viewer Modal
+const ovView = document.getElementById('ovView');
+const mdView = document.getElementById('mdView');
+const vImg = document.getElementById('vImg');
+const vTitle = document.getElementById('vTitle');
+const vCat = document.getElementById('vCat');
+const vPrice = document.getElementById('vPrice');
+const vDesc = document.getElementById('vDesc');
+const vBuy = document.getElementById('vBuy');
+const vClose = document.getElementById('vClose');
+
+function openViewer(e){ const idx = e.target.dataset.index; openViewerIndex(idx); }
+function openViewerIndex(idx){
+  const p = catalog[Number(idx)]; if(!p) return;
+  vImg.src = p.img; vTitle.textContent = p.name; vCat.textContent = p.cat; vPrice.textContent = "$ " + p.price; vDesc.textContent = p.desc || "—";
+  vBuy.href = `https://wa.me/${WHATS}?text=Hola%20EVARA,%20quiero%20comprar:%20${encodeURIComponent(p.name)}%20($%20${encodeURIComponent(p.price)})`;
+  ovView.classList.add('active'); mdView.classList.add('active');
+}
+function closeViewer(){ ovView.classList.remove('active'); mdView.classList.remove('active'); }
+ovView.addEventListener('click', closeViewer);
+vClose.addEventListener('click', closeViewer);
+
+// Init
+function renderAll(){ renderFilters(); renderGrid(); applyFilter(); }
+renderAll();
+</script>
+</body>
+</html>
